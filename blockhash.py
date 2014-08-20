@@ -9,57 +9,82 @@
 import argparse
 import PIL.Image as Image
 
-def median1(data):
+def median(data):
     data = sorted(data)
     length = len(data)
     if length % 2 == 0:
         return (data[length // 2] + data[length // 2 + 1]) / 2.0
     return data[length // 2]
 
-def median2(data):
-    data = sorted(data)
-    length = len(data)
-    return data[length // 2]
+def method1(im, bits):
+    data = im.getdata()
+    width, height = im.size
+    blocksize_x = width // bits
+    blocksize_y = height // bits
 
-median = median2
-
-def method1(data, size, bits):
-    if size % (bits) != 0:
-        raise RuntimeError('Unable to split image of size {}x{} into {}x{} identical non-overlapping blocks'.format(size, size, bits, bits))
     result = []
-    blocksize = size // bits
 
     for y in range(bits):
         for x in range(bits):
             total = 0
 
-            for iy in range(blocksize):
-                for ix in range(blocksize):
-                    r, g, b = data[x * blocksize + ix, y * blocksize + iy]
-                    total += (r + g + b) / 3.0
+            for iy in range(blocksize_y):
+                for ix in range(blocksize_x):
+                    cx = x * blocksize_x + ix
+                    cy = y * blocksize_y + iy
+                    pix = data[cy * width + cx]
+
+                    if im.mode == 'L':
+                        total += pix
+                    elif im.mode == 'RGBA':
+                        r, g, b, a = pix
+                        total += (r + g + b + a) / 4.0
+                    elif im.mode == 'RGB':
+                        r, g, b = pix
+                        a = 255
+                        total += (r + g + b + a) / 4.0
+                    else:
+                        raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
 
             result.append(total)
 
     m = median(result)
     for i in range(bits * bits):
         result[i] = 0 if result[i] < m else 1
+
     return result
 
-def method2(data, size, bits):
-    if size % (bits + 1) != 0:
-        raise RuntimeError('Unable to split image of size {}x{} into {}x{} identical overlapping blocks'.format(size, size, bits, bits))
+def method2(im, bits):
+    data = im.getdata()
+    width, height = im.size
+    overlap_x = width // (bits + 1)
+    overlap_y = height // (bits + 1)
+    blocksize_x = overlap_x * 2
+    blocksize_y = overlap_y * 2
+
     result = []
-    overlap_size = size // (bits + 1)
-    blocksize = overlap_size * 2
 
     for y in range(bits):
         for x in range(bits):
             total = 0
 
-            for iy in range(blocksize):
-                for ix in range(blocksize):
-                    r, g, b = data[x * overlap_size + ix, y * overlap_size + iy]
-                    total += (r + g + b) / 3.0
+            for iy in range(blocksize_y):
+                for ix in range(blocksize_x):
+                    cx = x * overlap_x + ix
+                    cy = y * overlap_y + iy
+                    pix = data[cy * width + cx]
+
+                    if im.mode == 'L':
+                        total += pix
+                    elif im.mode == 'RGBA':
+                        r, g, b, a = pix
+                        total += (r + g + b + a) / 4.0
+                    elif im.mode == 'RGB':
+                        r, g, b = pix
+                        a = 255
+                        total += (r + g + b + a) / 4.0
+                    else:
+                        raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
 
             result.append(total)
 
@@ -73,10 +98,14 @@ if __name__ == '__main__':
 
     parser.add_argument('--method', type=int, default=1, choices=[1, 2],
         help='Use non-overlapping method (1) or overlapping (2). Default: 1')
+    parser.add_argument('--bits', type=int, default=16,
+        help='Create hash of size N^2 bits. Default: 16')
+    parser.add_argument('--size',
+        help='Resize image to specified size before hashing, e.g. 256x256')
     parser.add_argument('--interpolation', type=int, default=1, choices=[1, 2, 3, 4],
-        help='Interpolation method: 1 - nearest neightbor, 2 - bilinear, 3 - bicubic, 4 - high-quality downsampling. Default: 1')
-    parser.add_argument('--size', type=int, default=640, help='Resize the image to NxN pixels. Default: 640')
-    parser.add_argument('--bits', type=int, default=16, help='Create hash of size NxN bits. Default: 16')
+        help='Interpolation method: 1 - nearest neightbor, 2 - bilinear, 3 - bicubic, 4 - antialias. Default: 1')
+    parser.add_argument('--debug', action='store_true',
+        help='Print hashes as 2D maps (for debugging)')
     parser.add_argument('filenames', nargs='+')
 
     args = parser.parse_args()
@@ -97,13 +126,18 @@ if __name__ == '__main__':
 
     for fn in args.filenames:
         im = Image.open(fn)
-        im = im.resize((args.size, args.size), interpolation)
+        if args.size:
+            size = args.size.split('x')
+            size = (int(size[0]), int(size[1]))
+            im = im.resize(size, interpolation)
 
-        # convert to RGB, making sure we ignore alpha channel
-        # transparent pixels will become black
-        im = im.convert('RGB')
-
-        data = im.load()
-        hash = method(data, args.size, args.bits)
+        hash = method(im, args.bits)
         hash = ''.join([str(x) for x in hash])
+
         print('{} {}'.format(fn, hash))
+
+        if args.debug:
+            map = [hash[i:i+args.bits] for i in range(0, len(hash), args.bits)]
+            print("")
+            print("\n".join(map))
+            print("")
