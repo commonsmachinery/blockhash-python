@@ -88,60 +88,98 @@ def method2(im, bits):
         result[i] = 0 if result[i] < m else 1
     return result
 
-def method1_pixdiv(im, bits):
+def method_pixdiv(im, bits, overlap=True):
     data = im.getdata()
     width, height = im.size
-    block_width = float(width) / bits
-    block_height = float(height) / bits
 
-    blocks = [[0 for col in range(bits)] for row in range(bits)]
+    def onepass(block_width, block_height, x_offset, y_offset, maxblocks):
+        blocks = [[0 for col in range(maxblocks)] for row in range(maxblocks)]
 
-    for y in range(height):
-        y_frac, y_int = math.modf((y + 1) % block_height)
+        for y in range(y_offset, height):
+            y_frac, y_int = math.modf((y - y_offset + 1) % block_height)
 
-        weight_top = (1 - y_frac)
-        weight_bottom = (y_frac)
+            weight_top = (1 - y_frac)
+            weight_bottom = (y_frac)
 
-        # y_int will be 0 on bottom/right borders and on block boundaries
-        if y_int > 0 or (y + 1) == height:
-            block_top = block_bottom = int(math.floor(float(y) / block_height))
-        else:
-            block_top = int(math.floor(float(y) / block_height))
-            block_bottom = int(math.ceil(float(y) / block_height))
-
-        for x in range(width):
-            total = avg_value(im, data, x, y)
-            x_frac, x_int = math.modf((x + 1) % block_width)
-
-            weight_left = (1 - x_frac)
-            weight_right = (x_frac)
-
-            # x_int will be 0 on bottom/right borders and on block boundaries
-            if x_int > 0 or (x + 1) == width:
-                block_left = block_right = int(math.floor(float(x) / block_width))
+            # y_int will be 0 on bottom/right borders and on block boundaries
+            if y_int > 0 or (y + 1) == height:
+                block_top = block_bottom = int(math.floor(float(y - y_offset) / block_height))
             else:
-                block_left = int(math.floor(float(x) / block_width))
-                block_right = int(math.ceil(float(x) / block_width))
+                block_top = int(math.floor(float(y - y_offset) / block_height))
+                block_bottom = int(math.ceil(float(y - y_offset) / block_height))
 
-            # add weighted pixel value to relevant blocks
-            blocks[block_top][block_left] += total * weight_top * weight_left
-            blocks[block_top][block_right] += total * weight_top * weight_right
-            blocks[block_bottom][block_left] += total * weight_bottom * weight_left
-            blocks[block_bottom][block_right] += total * weight_bottom * weight_right
+            # stop after reaching maxblocks, in case we're doing 4-pass analysis with overlapping blocks
+            if block_bottom == maxblocks:
+                break
 
-    result = [blocks[row][col] for row in range(bits) for col in range(bits)]
+            for x in range(x_offset, width):
+                total = avg_value(im, data, x, y)
+                x_frac, x_int = math.modf((x - x_offset + 1) % block_width)
+
+                weight_left = (1 - x_frac)
+                weight_right = (x_frac)
+
+                # x_int will be 0 on bottom/right borders and on block boundaries
+                if x_int > 0 or (x + 1) == width:
+                    block_left = block_right = int(math.floor(float(x - x_offset) / block_width))
+                else:
+                    block_left = int(math.floor(float(x - x_offset) / block_width))
+                    block_right = int(math.ceil(float(x - x_offset) / block_width))
+
+                # stop after reaching maxblocks, in case we're doing 4-pass analysis with overlapping blocks
+                if block_right == maxblocks:
+                    break
+
+                # add weighted pixel value to relevant blocks
+                blocks[block_top][block_left] += total * weight_top * weight_left
+                blocks[block_top][block_right] += total * weight_top * weight_right
+                blocks[block_bottom][block_left] += total * weight_bottom * weight_left
+                blocks[block_bottom][block_right] += total * weight_bottom * weight_right
+
+        return blocks
+
+    if overlap:
+        overlap_width = float(width) / (bits + 1)
+        overlap_height = float(height) / (bits + 1)
+        block_width = overlap_width * 2
+        block_height = overlap_height * 2
+
+        blocks1 = onepass(block_width, block_height, 0, 0, bits // 2)
+        blocks2 = onepass(block_width, block_height, int(overlap_width), 0, bits // 2)
+        blocks3 = onepass(block_width, block_height, 0, int(overlap_height), bits // 2)
+        blocks4 = onepass(block_width, block_height, int(overlap_width), int(overlap_height), bits // 2)
+
+        result = []
+        for row in range(0, bits // 2):
+            for col in range(bits // 2):
+                result.append(blocks1[row][col])
+                result.append(blocks2[row][col])
+            for col in range(bits // 2):
+                result.append(blocks3[row][col])
+                result.append(blocks4[row][col])
+    else:
+        block_width = float(width) / bits
+        block_height = float(height) / bits
+
+        blocks = onepass(block_width, block_height, 0, 0, bits)
+        result = [blocks[row][col] for row in range(bits) for col in range(bits)]
 
     m = median(result)
     for i in range(bits * bits):
         result[i] = 0 if result[i] < m else 1
     return result
 
+def method3(im, bits):
+    return method_pixdiv(im, bits, overlap=False)
+
+def method4(im, bits):
+    return method_pixdiv(im, bits, overlap=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--method', type=int, default=1, choices=[1, 2, 3],
-        help='Use non-overlapping method (1), overlapping (2), pixdiv (3). Default: 1')
+    parser.add_argument('--method', type=int, default=1, choices=[1, 2, 3, 4],
+        help='Use non-overlapping method (1), overlapping (2), pixdiv (3), overlapping pixdiv (4). Default: 1')
     parser.add_argument('--bits', type=int, default=16,
         help='Create hash of size N^2 bits. Default: 16')
     parser.add_argument('--size',
@@ -168,7 +206,9 @@ if __name__ == '__main__':
     elif args.method == 2:
         method = method2
     elif args.method == 3:
-        method = method1_pixdiv
+        method = method3
+    elif args.method == 4:
+        method = method4
 
     for fn in args.filenames:
         im = Image.open(fn)
