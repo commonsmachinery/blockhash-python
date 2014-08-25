@@ -216,6 +216,8 @@ if __name__ == '__main__':
         # convert indexed/grayscale images to RGB
         if im.mode == 'L' or im.mode == 'P':
             im = im.convert('RGB')
+        elif im.mode == 'LA':
+            im = im.convert('RGBA')
 
         if args.size:
             size = args.size.split('x')
