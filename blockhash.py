@@ -214,7 +214,7 @@ if __name__ == '__main__':
         im = Image.open(fn)
 
         # convert indexed/grayscale images to RGB
-        if im.mode == 'L' or im.mode == 'P':
+        if im.mode == '1' or im.mode == 'L' or im.mode == 'P':
             im = im.convert('RGB')
         elif im.mode == 'LA':
             im = im.convert('RGBA')
