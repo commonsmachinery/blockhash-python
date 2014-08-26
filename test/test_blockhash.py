@@ -28,7 +28,7 @@ class BlockhashTestCase(unittest.TestCase):
         elif im.mode == 'LA':
             im = im.convert('RGBA')
 
-        hash = open(self.hash_filename).readline().split()[1]
+        expected_hash = open(self.hash_filename).readline().split()[1]
 
         if self.method == 1:
             method = blockhash.method1
@@ -39,7 +39,9 @@ class BlockhashTestCase(unittest.TestCase):
         elif self.method == 4:
             method = blockhash.method4
 
-        method(im, self.bits)
+        hash = method(im, self.bits)
+        hash = "".join([str(x) for x in hash])
+        self.assertEqual(expected_hash, hash)
 
 def load_tests(loader, tests, pattern):
     test_cases = unittest.TestSuite()
