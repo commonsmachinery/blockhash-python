@@ -25,11 +25,11 @@ def avg_value(im, data, x, y):
 
     if im.mode == 'RGBA':
         r, g, b, a = pix
-        result = (r + g + b + a) / 4.0
+        result = float(r + g + b + a)
     elif im.mode == 'RGB':
         r, g, b = pix
         a = 255
-        result = (r + g + b + a) / 4.0
+        result = float(r + g + b + a)
     else:
         raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
 
