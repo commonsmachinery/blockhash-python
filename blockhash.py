@@ -35,6 +35,10 @@ def avg_value(im, data, x, y):
 
     return result
 
+def bits_to_hexhash(bits):
+    return '{0:0={width}x}'.format(int(''.join([str(x) for x in bits]), 2), width = len(bits) / 4)
+
+
 def method1(im, bits):
     data = im.getdata()
     width, height = im.size
@@ -59,7 +63,7 @@ def method1(im, bits):
     for i in range(bits * bits):
         result[i] = 0 if result[i] < m else 1
 
-    return result
+    return bits_to_hexhash(result)
 
 def method2(im, bits):
     data = im.getdata()
@@ -86,7 +90,7 @@ def method2(im, bits):
     m = median(result)
     for i in range(bits * bits):
         result[i] = 0 if result[i] < m else 1
-    return result
+    return bits_to_hexhash(result)
 
 def method_pixdiv(im, bits, overlap=True):
     data = im.getdata()
@@ -167,7 +171,7 @@ def method_pixdiv(im, bits, overlap=True):
     m = median(result)
     for i in range(bits * bits):
         result[i] = 0 if result[i] < m else 1
-    return result
+    return bits_to_hexhash(result)
 
 def method3(im, bits):
     return method_pixdiv(im, bits, overlap=False)
@@ -178,8 +182,8 @@ def method4(im, bits):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--method', type=int, default=1, choices=[1, 2, 3, 4],
-        help='Use non-overlapping method (1), overlapping (2), pixdiv (3), overlapping pixdiv (4). Default: 1')
+    parser.add_argument('--method', type=int, default=3, choices=[1, 2, 3, 4],
+        help='Use quick non-overlapping method (1), quick overlapping (2), precise non-overlapping (3), precise overlapping (4). Default: 3')
     parser.add_argument('--bits', type=int, default=16,
         help='Create hash of size N^2 bits. Default: 16')
     parser.add_argument('--size',
@@ -225,7 +229,6 @@ if __name__ == '__main__':
             im = im.resize(size, interpolation)
 
         hash = method(im, args.bits)
-        hash = ''.join([str(x) for x in hash])
 
         print('{} {}'.format(fn, hash))
 
