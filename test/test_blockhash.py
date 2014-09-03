@@ -31,13 +31,9 @@ class BlockhashTestCase(unittest.TestCase):
         expected_hash = open(self.hash_filename).readline().split()[1]
 
         if self.method == 1:
-            method = blockhash.method1
+            method = blockhash.blockhash_even
         elif self.method == 2:
-            method = blockhash.method2
-        elif self.method == 3:
-            method = blockhash.method3
-        elif self.method == 4:
-            method = blockhash.method4
+            method = blockhash.blockhash
 
         hash = method(im, self.bits)
         hash = "".join([str(x) for x in hash])
@@ -46,7 +42,7 @@ class BlockhashTestCase(unittest.TestCase):
 def load_tests(loader, tests, pattern):
     test_cases = unittest.TestSuite()
     for img_fn in glob.glob(os.path.join(datadir, '*.jpg')):
-        for m in range(4):
+        for m in range(2):
             bits = 16
             method = m + 1
             basename, ext = os.path.splitext(img_fn)
