@@ -28,13 +28,6 @@ class BlockhashTestCase(unittest.TestCase):
         elif im.mode == 'LA':
             im = im.convert('RGBA')
 
-        if im.mode == 'RGBA':
-            total_value = blockhash.total_value_rgba
-        elif im.mode == 'RGB':
-            total_value = blockhash.total_value_rgb
-        else:
-            raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
-
         expected_hash = open(self.hash_filename).readline().split()[1]
 
         if self.method == 1:
@@ -42,7 +35,7 @@ class BlockhashTestCase(unittest.TestCase):
         elif self.method == 2:
             method = blockhash.blockhash
 
-        hash = method(im, self.bits, total_value)
+        hash = method(im, self.bits)
         hash = "".join([str(x) for x in hash])
         self.assertEqual(expected_hash, hash)
 

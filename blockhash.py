@@ -27,7 +27,14 @@ def bits_to_hexhash(bits):
     return '{0:0={width}x}'.format(int(''.join([str(x) for x in bits]), 2), width = len(bits) / 4)
 
 
-def blockhash_even(im, bits, total_value):
+def blockhash_even(im, bits):
+    if im.mode == 'RGBA':
+        total_value = total_value_rgba
+    elif im.mode == 'RGB':
+        total_value = total_value_rgb
+    else:
+        raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
+
     data = im.getdata()
     width, height = im.size
     blocksize_x = width // bits
@@ -53,7 +60,14 @@ def blockhash_even(im, bits, total_value):
 
     return bits_to_hexhash(result)
 
-def blockhash(im, bits, total_value):
+def blockhash(im, bits):
+    if im.mode == 'RGBA':
+        total_value = total_value_rgba
+    elif im.mode == 'RGB':
+        total_value = total_value_rgb
+    else:
+        raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
+
     data = im.getdata()
     width, height = im.size
 
@@ -61,7 +75,7 @@ def blockhash(im, bits, total_value):
     even_y = height % bits == 0
 
     if even_x and even_y:
-        return blockhash_even(im, bits, total_value)
+        return blockhash_even(im, bits)
 
     blocks = [[0 for col in range(bits)] for row in range(bits)]
 
@@ -119,17 +133,11 @@ def blockhash(im, bits, total_value):
         result[i] = 0 if result[i] < m else 1
     return bits_to_hexhash(result)
 
-def method1(im, bits, total_value):
-    return blockhash_even(im, bits, total_value)
-
-def method2(im, bits, total_value):
-    return blockhash(im, bits, total_value)
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--method', type=int, default=2, choices=[1, 2],
-        help='Use quick method (1), precise (2). Default: 2')
+    parser.add_argument('--quick', type=bool, default=False,
+        help='Use quick hashing method. Default: False')
     parser.add_argument('--bits', type=int, default=16,
         help='Create hash of size N^2 bits. Default: 16')
     parser.add_argument('--size',
@@ -151,10 +159,10 @@ if __name__ == '__main__':
     elif args.interpolation == 4:
         interpolation = Image.ANTIALIAS
 
-    if args.method == 1:
-        method = method1
-    elif args.method == 2:
-        method = method2
+    if args.quick:
+        method = blockhash_even
+    else:
+        method = blockhash
 
     for fn in args.filenames:
         im = Image.open(fn)
@@ -165,24 +173,18 @@ if __name__ == '__main__':
         elif im.mode == 'LA':
             im = im.convert('RGBA')
 
-        if im.mode == 'RGBA':
-            total_value = total_value_rgba
-        elif im.mode == 'RGB':
-            total_value = total_value_rgb
-        else:
-            raise RuntimeError('Unsupported image mode: {}'.format(im.mode))
-
         if args.size:
             size = args.size.split('x')
             size = (int(size[0]), int(size[1]))
             im = im.resize(size, interpolation)
 
-        hash = method(im, args.bits, total_value)
+        hash = method(im, args.bits)
 
         print('{} {}'.format(fn, hash))
 
         if args.debug:
-            map = [hash[i:i+args.bits] for i in range(0, len(hash), args.bits)]
+            bin_hash = bin(int(hash, 16))[2:]
+            map = [bin_hash[i:i+args.bits] for i in range(0, len(bin_hash), args.bits)]
             print("")
             print("\n".join(map))
             print("")
