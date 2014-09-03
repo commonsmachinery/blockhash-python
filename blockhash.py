@@ -119,11 +119,11 @@ def blockhash(im, bits, total_value):
         result[i] = 0 if result[i] < m else 1
     return bits_to_hexhash(result)
 
-def method1(im, bits):
-    return blockhash_even(im, bits)
+def method1(im, bits, total_value):
+    return blockhash_even(im, bits, total_value)
 
-def method2(im, bits):
-    return blockhash(im, bits)
+def method2(im, bits, total_value):
+    return blockhash(im, bits, total_value)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
