@@ -18,10 +18,15 @@ def median(data):
     return data[length // 2]
 
 def total_value_rgba(im, data, x, y):
-    return sum(data[y * im.size[0] + x])
+    r, g, b, a = data[y * im.size[0] + x]
+    if a == 0:
+        return 765
+    else:
+        return r + g + b
 
 def total_value_rgb(im, data, x, y):
-    return sum(data[y * im.size[0] + x], 255)
+    r, g, b = data[y * im.size[0] + x]
+    return r + g + b
 
 def bits_to_hexhash(bits):
     return '{0:0={width}x}'.format(int(''.join([str(x) for x in bits]), 2), width = len(bits) / 4)
