@@ -29,7 +29,7 @@ def total_value_rgb(im, data, x, y):
     return r + g + b
 
 def bits_to_hexhash(bits):
-    return '{0:0={width}x}'.format(int(''.join([str(x) for x in bits]), 2), width = len(bits) / 4)
+    return '{0:0={width}x}'.format(int(''.join([str(x) for x in bits]), 2), width = len(bits) // 4)
 
 
 def blockhash_even(im, bits):
@@ -59,9 +59,18 @@ def blockhash_even(im, bits):
 
             result.append(value)
 
-    m = median(result)
+    m = []
+    for i in range(4):
+        m.append(median(result[i*bits*bits//4:i*bits*bits//4+bits*bits//4]))
+
     for i in range(bits * bits):
-        result[i] = 0 if result[i] < m else 1
+        if (((result[i] < m[0]) and (i < bits*bits/4)) or
+            ((result[i] < m[1]) and (i >= bits*bits/4) and (i < bits*bits/2)) or
+            ((result[i] < m[2]) and (i >= bits*bits/2) and (i < bits*bits/4+bits*bits/2)) or
+            ((result[i] < m[3]) and (i >= bits*bits/2+bits*bits/4))):
+            result[i] = 0
+        else:
+            result[i] = 1
 
     return bits_to_hexhash(result)
 
@@ -133,9 +142,19 @@ def blockhash(im, bits):
 
     result = [blocks[row][col] for row in range(bits) for col in range(bits)]
 
-    m = median(result)
+    m = []
+    for i in range(4):
+        m.append(median(result[i*bits*bits//4:i*bits*bits//4+bits*bits//4]))
+
     for i in range(bits * bits):
-        result[i] = 0 if result[i] < m else 1
+        if (((result[i] < m[0]) and (i < bits*bits/4)) or
+            ((result[i] < m[1]) and (i >= bits*bits/4) and (i < bits*bits/2)) or
+            ((result[i] < m[2]) and (i >= bits*bits/2) and (i < bits*bits/4+bits*bits/2)) or
+            ((result[i] < m[3]) and (i >= bits*bits/2+bits*bits/4))):
+            result[i] = 0
+        else:
+            result[i] = 1
+
     return bits_to_hexhash(result)
 
 if __name__ == '__main__':
