@@ -31,6 +31,41 @@ def total_value_rgb(im, data, x, y):
 def bits_to_hexhash(bits):
     return '{0:0={width}x}'.format(int(''.join([str(x) for x in bits]), 2), width = len(bits) // 4)
 
+def gradient(data, bits):
+    rdx = []
+    rdy = []
+
+    for y in range(bits):
+        for x in range(bits):
+            if y in range(1, bits - 1):
+                dy = data[(y-1)*bits + x] - data[(y+1)*bits + x]
+            #else:
+            #    dy = 1
+            elif y == 0:
+                dy = data[x] - data[bits + x]
+            elif y == bits - 1:
+                dy = data[(y-1)*bits + x] - data[y*bits + x]
+
+            if x in range(1, bits - 1):
+                dx = data[y*bits + (x-1)] - data[y*bits + (x+1)]
+            #else:
+            #    dx = 1
+            elif x == 0:
+                dx = data[y*bits] - data[y*bits + 1]
+            elif x == bits - 1:
+                dx = data[y*bits + (x-1)] - data[y*bits + x]
+
+            rdx.append(dx)
+            rdy.append(dy)
+
+    result = []
+
+    for i in range(bits*bits):
+        theta = math.atan2(rdy[i], rdx[i])
+        mag = math.sqrt((rdx[i] ** 2) + (rdy[i] ** 2))
+        result.append(mag)
+
+    return result
 
 def blockhash_even(im, bits):
     if im.mode == 'RGBA':
@@ -59,15 +94,21 @@ def blockhash_even(im, bits):
 
             result.append(value)
 
-    m = []
-    for i in range(4):
-        m.append(median(result[i*bits*bits//4:i*bits*bits//4+bits*bits//4]))
+    grad = gradient(result, bits)
+    result = grad
+
+    m2 = []
+    for y in range(bits):
+        for x in range(bits):
+            window = []
+            for iy in range(y-1, y+2):
+                for ix in range(x-1, x+2):
+                    if ix in range(bits) and iy in range(bits):
+                        window.append(result[iy*bits + ix])
+            m2.append(median(window))
 
     for i in range(bits * bits):
-        if (((result[i] < m[0]) and (i < bits*bits/4)) or
-            ((result[i] < m[1]) and (i >= bits*bits/4) and (i < bits*bits/2)) or
-            ((result[i] < m[2]) and (i >= bits*bits/2) and (i < bits*bits/4+bits*bits/2)) or
-            ((result[i] < m[3]) and (i >= bits*bits/2+bits*bits/4))):
+        if result[i] < m2[i]:
             result[i] = 0
         else:
             result[i] = 1
@@ -142,15 +183,21 @@ def blockhash(im, bits):
 
     result = [blocks[row][col] for row in range(bits) for col in range(bits)]
 
-    m = []
-    for i in range(4):
-        m.append(median(result[i*bits*bits//4:i*bits*bits//4+bits*bits//4]))
+    grad = gradient(result, bits)
+    result = grad
+
+    m2 = []
+    for y in range(bits):
+        for x in range(bits):
+            window = []
+            for iy in range(y-1, y+2):
+                for ix in range(x-1, x+2):
+                    if ix in range(bits) and iy in range(bits):
+                        window.append(result[iy*bits + ix])
+            m2.append(median(window))
 
     for i in range(bits * bits):
-        if (((result[i] < m[0]) and (i < bits*bits/4)) or
-            ((result[i] < m[1]) and (i >= bits*bits/4) and (i < bits*bits/2)) or
-            ((result[i] < m[2]) and (i >= bits*bits/2) and (i < bits*bits/4+bits*bits/2)) or
-            ((result[i] < m[3]) and (i >= bits*bits/2+bits*bits/4))):
+        if result[i] < m2[i]:
             result[i] = 0
         else:
             result[i] = 1
