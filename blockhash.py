@@ -204,7 +204,7 @@ if __name__ == '__main__':
 
         hash = method(im, args.bits)
 
-        print('{} {}'.format(fn, hash))
+        print('{hash}  {fn}'.format(fn=fn, hash=hash))
 
         if args.debug:
             bin_hash = '{:0{width}b}'.format(int(hash, 16), width=args.bits ** 2)
