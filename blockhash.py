@@ -28,6 +28,25 @@ def total_value_rgb(im, data, x, y):
     r, g, b = data[y * im.size[0] + x]
     return r + g + b
 
+def translate_blocks_to_bits(blocks, pixels_per_block):
+    half_block_value = pixels_per_block * 256 * 3 / 2
+
+    # Compare medians across four horizontal bands
+    bandsize = len(blocks) // 4
+    for i in range(4):
+        m = median(blocks[i * bandsize : (i + 1) * bandsize])
+        for j in range(i * bandsize, (i + 1) * bandsize):
+            v = blocks[j]
+
+            # Output a 1 if the block is brighter than the median.
+            # With images dominated by black or white, the median may
+            # end up being 0 or the max value, and thus having a lot
+            # of blocks of value equal to the median.  To avoid
+            # generating hashes of all zeros or ones, in that case output
+            # 0 if the median is in the lower value space, 1 otherwise
+            blocks[j] = int(v > m or (abs(v - m) < 1 and m > half_block_value))
+
+
 def bits_to_hexhash(bits):
     return '{0:0={width}x}'.format(int(''.join([str(x) for x in bits]), 2), width = len(bits) // 4)
 
@@ -59,19 +78,7 @@ def blockhash_even(im, bits):
 
             result.append(value)
 
-    m = []
-    for i in range(4):
-        m.append(median(result[i*bits*bits//4:i*bits*bits//4+bits*bits//4]))
-
-    for i in range(bits * bits):
-        if (((result[i] < m[0]) and (i < bits*bits/4)) or
-            ((result[i] < m[1]) and (i >= bits*bits/4) and (i < bits*bits/2)) or
-            ((result[i] < m[2]) and (i >= bits*bits/2) and (i < bits*bits/4+bits*bits/2)) or
-            ((result[i] < m[3]) and (i >= bits*bits/2+bits*bits/4))):
-            result[i] = 0
-        else:
-            result[i] = 1
-
+    translate_blocks_to_bits(result, blocksize_x * blocksize_y)
     return bits_to_hexhash(result)
 
 def blockhash(im, bits):
@@ -142,19 +149,7 @@ def blockhash(im, bits):
 
     result = [blocks[row][col] for row in range(bits) for col in range(bits)]
 
-    m = []
-    for i in range(4):
-        m.append(median(result[i*bits*bits//4:i*bits*bits//4+bits*bits//4]))
-
-    for i in range(bits * bits):
-        if (((result[i] < m[0]) and (i < bits*bits/4)) or
-            ((result[i] < m[1]) and (i >= bits*bits/4) and (i < bits*bits/2)) or
-            ((result[i] < m[2]) and (i >= bits*bits/2) and (i < bits*bits/4+bits*bits/2)) or
-            ((result[i] < m[3]) and (i >= bits*bits/2+bits*bits/4))):
-            result[i] = 0
-        else:
-            result[i] = 1
-
+    translate_blocks_to_bits(result, block_width * block_height)
     return bits_to_hexhash(result)
 
 if __name__ == '__main__':
