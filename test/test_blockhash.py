@@ -42,7 +42,7 @@ class BlockhashTestCase(unittest.TestCase):
 def load_tests(loader, tests, pattern):
     test_cases = unittest.TestSuite()
     for img_fn in (glob.glob(os.path.join(datadir, '*.jpg')) +
-                   glob.glob(os.path.join(datadir, '*.jpg'))):
+                   glob.glob(os.path.join(datadir, '*.png'))):
         for m in range(2):
             bits = 16
             method = m + 1
