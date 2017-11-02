@@ -28,16 +28,17 @@ class BlockhashTestCase(unittest.TestCase):
         elif im.mode == 'LA':
             im = im.convert('RGBA')
 
-        expected_hash = open(self.hash_filename).readline().split()[1]
+        with open(self.hash_filename) as f:
+            expected_hash = f.readline().split()[0]
 
-        if self.method == 1:
-            method = blockhash.blockhash_even
-        elif self.method == 2:
-            method = blockhash.blockhash
+            if self.method == 1:
+                method = blockhash.blockhash_even
+            elif self.method == 2:
+                method = blockhash.blockhash
 
-        hash = method(im, self.bits)
-        hash = "".join([str(x) for x in hash])
-        self.assertEqual(expected_hash, hash)
+            hash = method(im, self.bits)
+            hash = "".join([str(x) for x in hash])
+            self.assertEqual(expected_hash, hash)
 
 def load_tests(loader, tests, pattern):
     test_cases = unittest.TestSuite()

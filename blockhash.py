@@ -14,7 +14,7 @@ def median(data):
     data = sorted(data)
     length = len(data)
     if length % 2 == 0:
-        return (data[length // 2] + data[length // 2 + 1]) / 2.0
+        return (data[length // 2 - 1] + data[length // 2]) / 2.0
     return data[length // 2]
 
 def total_value_rgba(im, data, x, y):
