@@ -119,7 +119,7 @@ def blockhash(im, bits):
                 block_top = block_bottom = int(y // block_height)
             else:
                 block_top = int(y // block_height)
-                block_bottom = int(-(-y // block_height)) # int(math.ceil(float(y) / block_height))
+                block_bottom = int(math.ceil(float(y) / block_height)) # int(math.ceil(float(y) / block_height))
 
         for x in range(width):
             value = total_value(im, data, x, y)
@@ -139,7 +139,7 @@ def blockhash(im, bits):
                     block_left = block_right = int(x // block_width)
                 else:
                     block_left = int(x // block_width)
-                    block_right = int(-(-x // block_width)) # int(math.ceil(float(x) / block_width))
+                    block_right = int(math.ceil(float(x) / block_width)) # int(math.ceil(float(x) / block_width))
 
             # add weighted pixel value to relevant blocks
             blocks[block_top][block_left] += value * weight_top * weight_left
