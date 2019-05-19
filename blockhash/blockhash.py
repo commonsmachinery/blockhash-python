@@ -7,8 +7,7 @@
 # Distributed under an MIT license, please see LICENSE in the top dir.
 
 import math
-import argparse
-import PIL.Image as Image
+
 
 def median(data):
     data = sorted(data)
@@ -17,6 +16,7 @@ def median(data):
         return (data[length // 2 - 1] + data[length // 2]) / 2.0
     return data[length // 2]
 
+
 def total_value_rgba(im, data, x, y):
     r, g, b, a = data[y * im.size[0] + x]
     if a == 0:
@@ -24,9 +24,11 @@ def total_value_rgba(im, data, x, y):
     else:
         return r + g + b
 
+
 def total_value_rgb(im, data, x, y):
     r, g, b = data[y * im.size[0] + x]
     return r + g + b
+
 
 def translate_blocks_to_bits(blocks, pixels_per_block):
     half_block_value = pixels_per_block * 256 * 3 / 2
@@ -80,6 +82,7 @@ def blockhash_even(im, bits):
 
     translate_blocks_to_bits(result, blocksize_x * blocksize_y)
     return bits_to_hexhash(result)
+
 
 def blockhash(im, bits):
     if im.mode == 'RGBA':
@@ -152,58 +155,3 @@ def blockhash(im, bits):
     translate_blocks_to_bits(result, block_width * block_height)
     return bits_to_hexhash(result)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--quick', type=bool, default=False,
-        help='Use quick hashing method. Default: False')
-    parser.add_argument('--bits', type=int, default=16,
-        help='Create hash of size N^2 bits. Default: 16')
-    parser.add_argument('--size',
-        help='Resize image to specified size before hashing, e.g. 256x256')
-    parser.add_argument('--interpolation', type=int, default=1, choices=[1, 2, 3, 4],
-        help='Interpolation method: 1 - nearest neightbor, 2 - bilinear, 3 - bicubic, 4 - antialias. Default: 1')
-    parser.add_argument('--debug', action='store_true',
-        help='Print hashes as 2D maps (for debugging)')
-    parser.add_argument('filenames', nargs='+')
-
-    args = parser.parse_args()
-
-    if args.interpolation == 1:
-        interpolation = Image.NEAREST
-    elif args.interpolation == 2:
-        interpolation = Image.BILINEAR
-    elif args.interpolation == 3:
-        interpolation = Image.BICUBIC
-    elif args.interpolation == 4:
-        interpolation = Image.ANTIALIAS
-
-    if args.quick:
-        method = blockhash_even
-    else:
-        method = blockhash
-
-    for fn in args.filenames:
-        im = Image.open(fn)
-
-        # convert indexed/grayscale images to RGB
-        if im.mode == '1' or im.mode == 'L' or im.mode == 'P':
-            im = im.convert('RGB')
-        elif im.mode == 'LA':
-            im = im.convert('RGBA')
-
-        if args.size:
-            size = args.size.split('x')
-            size = (int(size[0]), int(size[1]))
-            im = im.resize(size, interpolation)
-
-        hash = method(im, args.bits)
-
-        print('{hash}  {fn}'.format(fn=fn, hash=hash))
-
-        if args.debug:
-            bin_hash = '{:0{width}b}'.format(int(hash, 16), width=args.bits ** 2)
-            map = [bin_hash[i:i+args.bits] for i in range(0, len(bin_hash), args.bits)]
-            print("")
-            print("\n".join(map))
-            print("")

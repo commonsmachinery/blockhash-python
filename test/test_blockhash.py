@@ -4,12 +4,17 @@
 # Copyright 2014 Commons Machinery http://commonsmachinery.se/
 # Distributed under an MIT license, please see LICENSE in the top dir.
 
+import glob
+import os
 import unittest
-import blockhash
+
 import PIL.Image as Image
-import os, glob
+
+import blockhash
+
 
 datadir = os.path.join(os.path.dirname(__file__), 'data')
+
 
 class BlockhashTestCase(unittest.TestCase):
     def __init__(self, img_filename=None, hash_filename=None, method=None, bits=None):
@@ -40,6 +45,7 @@ class BlockhashTestCase(unittest.TestCase):
             hash = "".join([str(x) for x in hash])
             self.assertEqual(expected_hash, hash)
 
+
 def load_tests(loader, tests, pattern):
     test_cases = unittest.TestSuite()
     for img_fn in (glob.glob(os.path.join(datadir, '*.jpg')) +
@@ -52,3 +58,7 @@ def load_tests(loader, tests, pattern):
             test_cases.addTest(BlockhashTestCase(img_fn, hash_fn, method, bits))
         pass
     return test_cases
+
+
+if __name__ == '__main__':
+    unittest.main()
