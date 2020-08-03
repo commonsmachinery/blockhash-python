@@ -3,6 +3,8 @@
 
 import math
 
+import blockhash.constants
+
 def median(data):
     data = sorted(data)
     length = len(data)
@@ -44,7 +46,7 @@ def bits_to_hexhash(bits):
     return '{0:0={width}x}'.format(int(''.join([str(x) for x in bits]), 2), width = len(bits) // 4)
 
 
-def blockhash_even(im, bits):
+def blockhash_even(im, bits=blockhash.constants.DEFAULT_BITS):
     if im.mode == 'RGBA':
         total_value = total_value_rgba
     elif im.mode == 'RGB':
@@ -74,7 +76,7 @@ def blockhash_even(im, bits):
     translate_blocks_to_bits(result, blocksize_x * blocksize_y)
     return bits_to_hexhash(result)
 
-def blockhash(im, bits):
+def blockhash(im, bits=blockhash.constants.DEFAULT_BITS):
     if im.mode == 'RGBA':
         total_value = total_value_rgba
     elif im.mode == 'RGB':

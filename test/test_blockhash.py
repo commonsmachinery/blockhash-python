@@ -10,7 +10,7 @@ import glob
 
 import PIL.Image as Image
 
-import blockhash.blockhash
+import blockhash.core
 
 datadir = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -35,9 +35,9 @@ class BlockhashTestCase(unittest.TestCase):
             expected_hash = f.readline().split()[0]
 
             if self.method == 1:
-                method = blockhash.blockhash.blockhash_even
+                method = blockhash.core.blockhash_even
             elif self.method == 2:
-                method = blockhash.blockhash.blockhash
+                method = blockhash.core.blockhash
 
             hash = method(im, self.bits)
             hash = "".join([str(x) for x in hash])
@@ -62,7 +62,7 @@ class TestBlockhash(unittest.TestCase):
         filepath = os.path.join(_ASSETS_PATH, 'swiss_army_knife.jpg')
 
         with Image.open(filepath) as im:
-            digest = blockhash.blockhash.blockhash_even(im, 16)
+            digest = blockhash.core.blockhash_even(im, 16)
 
         self.assertEquals(digest, 'ffcff903f801e800ff01fc03fc03f803e00fc20fe00ff1cff00ff01ffc1ffe7f')
 
@@ -70,6 +70,6 @@ class TestBlockhash(unittest.TestCase):
         filepath = os.path.join(_ASSETS_PATH, 'swiss_army_knife.jpg')
 
         with Image.open(filepath) as im:
-            digest = blockhash.blockhash.blockhash(im, 16)
+            digest = blockhash.core.blockhash(im, 16)
 
         self.assertEquals(digest, 'ff4ff907f801e800ff01fc83fc03f003e00fc20fe00ff1cff00ff81ffc1ffe7f')

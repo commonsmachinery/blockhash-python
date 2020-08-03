@@ -15,7 +15,9 @@ import argparse
 
 import PIL.Image as Image
 
-import blockhash.blockhash
+import blockhash.constants
+import blockhash.core
+import blockhash.utility
 
 def _main():
     parser = argparse.ArgumentParser()
@@ -27,8 +29,8 @@ def _main():
 
     parser.add_argument(
         '--bits',
-        type=int, default=16,
-        help='Create hash of size N^2 bits. Default: 16')
+        type=int, default=blockhash.constants.DEFAULT_BITS,
+        help='Create hash of size N^2 bits.')
 
     parser.add_argument(
         '--size',
@@ -62,30 +64,25 @@ def _main():
         interpolation = Image.ANTIALIAS
 
     if args.quick:
-        method = blockhash.blockhash.blockhash_even
+        method = blockhash.core.blockhash_even
     else:
-        method = blockhash.blockhash.blockhash
+        method = blockhash.core.blockhash
 
     for fn in args.filenames:
-        im = Image.open(fn)
+        with Image.open(fn) as im:
+            im = blockhash.utility.normalize_image(im)
 
-        # convert indexed/grayscale images to RGB
-        if im.mode == '1' or im.mode == 'L' or im.mode == 'P':
-            im = im.convert('RGB')
-        elif im.mode == 'LA':
-            im = im.convert('RGBA')
+            if args.size:
+                size = args.size.split('x')
+                size = (int(size[0]), int(size[1]))
+                im = im.resize(size, interpolation)
 
-        if args.size:
-            size = args.size.split('x')
-            size = (int(size[0]), int(size[1]))
-            im = im.resize(size, interpolation)
+            hash_ = method(im, args.bits)
 
-        hash = method(im, args.bits)
-
-        print('{hash}  {fn}'.format(fn=fn, hash=hash))
+        print('{hash}  {fn}'.format(fn=fn, hash=hash_))
 
         if args.debug:
-            bin_hash = '{:0{width}b}'.format(int(hash, 16), width=args.bits ** 2)
+            bin_hash = '{:0{width}b}'.format(int(hash_, 16), width=args.bits ** 2)
             map = [bin_hash[i:i+args.bits] for i in range(0, len(bin_hash), args.bits)]
             print("")
             print("\n".join(map))
