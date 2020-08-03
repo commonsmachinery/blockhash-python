@@ -1,4 +1,4 @@
-**This is a fork of the original, stale project to fix some of the issues, add some unit-tests, and to push to PyPI.**
+**This is a fork of the original, stale project to fix some of the issues, add CI verification, and to push to PyPI.**
 
 blockhash-python
 ================
