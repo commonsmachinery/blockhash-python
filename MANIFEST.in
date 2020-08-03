@@ -1,0 +1,3 @@
+include blockhash/resources/*
+include blockhash/resources/scripts/*
+
