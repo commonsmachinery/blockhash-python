@@ -6,14 +6,20 @@ blockhash-python
 This is a perceptual image hash calculation tool based on algorithm descibed in
 Block Mean Value Based Image Perceptual Hashing by Bian Yang, Fan Gu and Xiamu Niu.
 
+Installation
+------------
+
+Either download/clone the project directly, or install the "phash-blockhashio" package from PyPI.
+
+
 Usage
 -----
 
 This script requires Python 2.x or Python 3 and Python Imaging (PIL) 1.1.6 or above.
 
-Run `blockhash.py [list of images]` for calculating hashes.
+Run `blockhash [list of images]` for calculating hashes.
 
-Run `blockhash.py --help` for the list of options.
+Run `blockhash --help` for the list of options.
 
 License
 -------
