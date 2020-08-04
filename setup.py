@@ -13,6 +13,9 @@ with open(os.path.join(_APP_PATH, 'resources', 'README.md')) as f:
 with open(os.path.join(_APP_PATH, 'resources', 'requirements.txt')) as f:
       install_requires = [s.strip() for s in f.readlines()]
 
+with open(os.path.join(_APP_PATH, 'resources', 'requirements-testing.txt')) as f:
+      test_requires = [s.strip() for s in f.readlines()]
+
 setuptools.setup(
     name='phash-blockhashio',
     version=blockhash.__version__,
@@ -26,7 +29,7 @@ setuptools.setup(
         'blockhash/resources/scripts/blockhash'
     ],
     install_requires=install_requires,
-    tests_require=install_requires + ['nose2'],
+    tests_require=install_requires + test_requires,
     url='https://github.com/dsoprea/blockhash-python',
     packages=setuptools.find_packages(exclude=['tests']),
     include_package_data=True,
@@ -34,6 +37,7 @@ setuptools.setup(
         'blockhash': [
             'resources/README.md',
             'resources/requirements.txt',
+            'resources/requirements-testing.txt',
         ],
     },
 )
