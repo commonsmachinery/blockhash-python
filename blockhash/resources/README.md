@@ -1,4 +1,7 @@
-**This is a fork of the original, stale project to fix some of the issues, add CI verification, and to push to PyPI.**
+**This is a fork of the original, stale project to fix some of the issues, add CI verification, and push to PyPI.**
+
+[![Build Status](https://travis-ci.com/dsoprea/blockhash-python.svg?branch=master)](https://travis-ci.com/dsoprea/blockhash-python)
+[![Coverage Status](https://coveralls.io/repos/github/dsoprea/blockhash-python/badge.svg?branch=master)](https://coveralls.io/github/dsoprea/blockhash-python?branch=master)
 
 blockhash-python
 ================
