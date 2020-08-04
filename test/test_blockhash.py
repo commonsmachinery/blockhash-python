@@ -12,6 +12,9 @@ import PIL.Image as Image
 
 import blockhash.core
 
+_APP_PATH = os.path.join(os.path.dirname(__file__), '..')
+_ASSETS_PATH = os.path.join(_APP_PATH, 'assets')
+
 datadir = os.path.join(os.path.dirname(__file__), 'data')
 
 class BlockhashTestCase(unittest.TestCase):

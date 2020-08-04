@@ -16,7 +16,11 @@ class TestCommand(unittest.TestCase):
             filepath,
         ]
 
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        output = \
+            subprocess.check_output(
+                cmd,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True)
 
         parts = output.split()
 
@@ -31,7 +35,11 @@ class TestCommand(unittest.TestCase):
             filepath,
         ]
 
-        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        output = \
+            subprocess.check_output(
+                cmd,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True)
 
         parts = output.split()
 
